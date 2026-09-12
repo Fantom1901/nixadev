@@ -22,4 +22,4 @@ def upgrade() -> None:
     op.alter_column('projects', 'view_count', new_column_name='views_count')
 
 def downgrade() -> None:
-    op.alter_column('projects', 'views_count', new_column_name='view_count')2
+    op.alter_column('projects', 'views_count', new_column_name='view_count')
