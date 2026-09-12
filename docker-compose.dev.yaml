@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    container_name: nixadev-db
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 3s
@@ -20,12 +21,11 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    # Переопределяем команду на uvicorn с --reload
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app  # Монтируем исходники для мгновенного перезапуска
+      - ./backend:/app
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -33,7 +33,8 @@ services:
       DB_PASS: ${DB_PASS:-postgres}
       DB_NAME: ${DB_NAME:-postgres}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build:
