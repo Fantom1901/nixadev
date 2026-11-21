@@ -5,6 +5,7 @@ from app.api.v1.endpoints.achievements import router as achievements_router
 from app.api.v1.endpoints.admin.achievements import router as admin_achievements_router
 from app.api.v1.endpoints.projects import router as public_projects_router
 from app.api.v1.endpoints.admin.projects import router as admin_projects_router
+from app.api.v1.endpoints.auth import router as auth_router
 
 router = APIRouter()
 
@@ -21,6 +22,12 @@ router.include_router(
     achievements_router,
     prefix="/achievements",
     tags=["Achievements"],
+)
+
+router.include_router(
+  auth_router,
+  prefix="/auth",
+  tags=["Auth"]
 )
 
 # Админские роуты (/api/v1/admin/projects)

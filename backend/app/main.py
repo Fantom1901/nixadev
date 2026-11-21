@@ -7,6 +7,7 @@ from rich.traceback import install
 
 from app.api.router import api_router
 from app.core.logging import setup_logging
+from app.core.middleware import setup_middlewares
 
 # Отсекаем фреймы сторонних библиотек из стектрейсов
 install(
@@ -28,7 +29,7 @@ logger = setup_logging()
 async def lifespan(app: FastAPI):
   # Действия при старте
   logger.info("=" * 50)
-  logger.info("🚀 College Flow API успешно запущен!")
+  logger.info("🚀 Nixa Dev API успешно запущен!")
   logger.info("📌 Документация и эндпоинты:")
   logger.info("   • Swagger UI:   http://localhost:8000/docs")
   logger.info("   • ReDoc:        http://localhost:8000/redoc")
@@ -38,27 +39,18 @@ async def lifespan(app: FastAPI):
   yield
 
   # Действия при завершении
-  logger.info("👋 Остановка бэкенда College Flow...")
+  logger.info("👋 Остановка бэкенда Nixa Dev...")
 
 
 app = FastAPI(
-  title="College Flow API",
+  title="NixaDev API",
   docs_url="/docs",
   redoc_url="/redoc",
   openapi_url="/openapi.json",
   lifespan=lifespan,
 )
 
-# --- MIDDLEWARES ---
-
-# CORS
-app.add_middleware(
-  CORSMiddleware,
-  allow_origins=["*"],
-  allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
-)
+setup_middlewares(app)
 
 
 # Логирование запросов с замером времени execution
