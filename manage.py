@@ -20,12 +20,18 @@ def run(cmd: list[str]) -> None:
     subprocess.run(cmd, cwd=ROOT_DIR)
 
 
+def get_compose_file(env: str) -> Path:
+    return PROD_COMPOSE if env == "prod" else DEV_COMPOSE
+
+
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
-        print(f"{CYAN}Использование:{NC} ./manage.py [dev|prod|stop|logs|migrate|build]")
+        print(f"{CYAN}Использование:{NC} ./manage.py [dev|prod|stop|logs|migrate|makemigrations|init-admin|build|rebuild|restart]")
         sys.exit(0)
 
     action = sys.argv[1].strip()
+    target_env = sys.argv[2].strip() if len(sys.argv) > 2 and sys.argv[2] in ("dev", "prod") else "dev"
+    compose_file = get_compose_file(target_env)
 
     if action == "dev":
         print(f"{CYAN}🚀 Запуск DEV-окружения (с hot-reload)...{NC}")
@@ -44,7 +50,7 @@ def main():
         run(["docker", "compose", "-f", str(PROD_COMPOSE), "down"])
 
     elif action == "logs":
-        service = sys.argv[2] if len(sys.argv) > 2 else ""
+        service = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] not in ("dev", "prod") else ""
         cmd = ["docker", "compose", "-f", str(DEV_COMPOSE), "logs", "-f"]
         if service:
             cmd.append(service)
@@ -54,9 +60,29 @@ def main():
         print(f"{CYAN}🔄 Применение миграций Alembic...{NC}")
         run(["docker", "compose", "-f", str(DEV_COMPOSE), "exec", "backend", "alembic", "upgrade", "head"])
 
+    elif action == "makemigrations":
+        message = sys.argv[2] if len(sys.argv) > 2 else "auto_migration"
+        print(f"{CYAN}📝 Создание новой миграции Alembic: '{message}'...{NC}")
+        run(["docker", "compose", "-f", str(DEV_COMPOSE), "exec", "backend", "alembic", "revision", "--autogenerate", "-m", message])
+
+
+    elif action == "init-admin":
+      print(f"{CYAN}👤 Инициализация суперадмина...{NC}")
+      run(["docker", "compose", "-f", str(DEV_COMPOSE), "exec", "-it", "backend", "python", "-m",
+           "app.scripts.init_admin"])
+
     elif action == "build":
-        print(f"{YELLOW}📦 Пересборка контейнеров...{NC}")
-        run(["docker", "compose", "-f", str(DEV_COMPOSE), "build"])
+        print(f"{YELLOW}📦 Пересборка контейнеров ({target_env})...{NC}")
+        run(["docker", "compose", "-f", str(compose_file), "build"])
+
+    elif action == "rebuild":
+        print(f"{YELLOW}🔄 Полная пересборка и перезапуск ({target_env})...{NC}")
+        detach = ["-d"] if target_env == "prod" else []
+        run(["docker", "compose", "-f", str(compose_file), "up", "--build", "--force-recreate"] + detach)
+
+    elif action == "restart":
+        print(f"{YELLOW}♻️ Перезапуск контейнеров без пересборки ({target_env})...{NC}")
+        run(["docker", "compose", "-f", str(compose_file), "restart"])
 
     else:
         print(f"{RED}Неизвестная команда: {action}{NC}")
