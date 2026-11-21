@@ -39,15 +39,18 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    command: sh -c "trap 'exit 0' TERM INT; sleep infinity & wait"
+      dockerfile: Dockerfile.dev
+    command: npm run dev
     ports:
       - "3000:3000"
+      - "5001:5001"
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.next
     environment:
       - WATCHPACK_POLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
 
 volumes:
   postgres_data_dev:
