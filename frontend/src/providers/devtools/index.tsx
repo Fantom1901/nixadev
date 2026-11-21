@@ -8,7 +8,7 @@ import {
 
 export const DevtoolsProvider = (props: React.PropsWithChildren) => {
   return (
-    <DevtoolsProviderBase>
+    <DevtoolsProviderBase url="http://localhost:5001">
       {props.children}
       <DevtoolsPanel />
     </DevtoolsProviderBase>
